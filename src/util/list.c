@@ -5,22 +5,6 @@
 
 int list_errno;
 
-struct list {
-    list_node_t* first;
-    size_t length;
-
-    void (*element_copy)(void**, void*);
-    void (*element_free)(void**);
-    int (*element_compare)(void*, void*);
-    void (*element_print)(void*);
-};
-
-struct list_node {
-    list_node_t* next;
-    list_node_t* prev;
-    void* element;
-};
-
 list_node_t* list_get_reference_at_index_null( list_t* list, int index );
 list_node_t* list_get_last_reference( list_t* list );
 int list_find_index(list_t* list, int (*equals)(void* element));
@@ -194,7 +178,7 @@ int list_get_index_of_element( list_t* list, void* element ){
 }
 
 void list_print( list_t* list ){
-    printf("List(%p,%d) -> %p\n", list, list->length, list->first);
+    printf("List(%p,%lu) -> %p\n", list, list->length, list->first);
     list_node_t* next = list->first;
     while(next != NULL) {
         printf("%p <- Node(%p,%p) -> %p\n", next->prev, next, next->element, next->next);

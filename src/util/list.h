@@ -1,5 +1,6 @@
 #ifndef LIST_H_
 #define LIST_H_
+#include <stddef.h>
 
 extern int list_errno;
 
@@ -19,6 +20,21 @@ typedef list_t *list_ptr_t;
 typedef struct list_node list_node_t;
 typedef list_node_t *list_node_ptr_t;
 
+struct list {
+    list_node_t* first;
+    size_t length;
+
+    void (*element_copy)(void**, void*);
+    void (*element_free)(void**);
+    int (*element_compare)(void*, void*);
+    void (*element_print)(void*);
+};
+
+struct list_node {
+    list_node_t* next;
+    list_node_t* prev;
+    void* element;
+};
 
 list_ptr_t list_create 	( // callback functions
 			  void (*element_copy)(element_ptr_t *dest_element, element_ptr_t src_element),
