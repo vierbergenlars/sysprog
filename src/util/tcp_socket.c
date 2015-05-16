@@ -63,10 +63,10 @@ tcp_select* tcp_select_create(
 void tcp_select_destroy(tcp_select* sel)
 {
     void _close_all(tcp_socket i) {
-        close(i);
+        if(i != sel->server_fd)
+            close(i);
     }
     tcp_select_foreach_fds(&sel->fds, sel->max_fd, _close_all);
-    close(sel->server_fd);
     free(sel);
 }
 
