@@ -36,16 +36,23 @@ int main(void)
                 exit(EXIT_SUCCESS);
             }
             char line[1024];
-            ssize_t readBytes = read(inSock, line, 1024);
+            int skipBytes = 0;
+            ssize_t readBytes;
+read_piece:
+            readBytes = read(inSock, line+skipBytes, 1024-skipBytes);
 try_nextline:
-            for(int i = 0; i < readBytes; i++) {
+            for(int i = skipBytes; i < readBytes; i++) {
                 if(line[i] == '\n') {
                     line[i] = '\0';
                     fprintf(outFd, "%d %d %s\n", ++seq, (int)time(NULL), line);
                     fflush(outFd);
                     memmove(line, &line[i+1], 1024-i);
                     readBytes-=i;
+                    skipBytes = 0;
                     goto try_nextline;
+                } else if(line[i] == '\0') {
+                    skipBytes = i;
+                    goto read_piece;
                 }
             }
         }
