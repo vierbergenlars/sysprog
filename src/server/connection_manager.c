@@ -1,6 +1,7 @@
 #include "connection_manager.h"
 #include "log.h"
 #include <stdlib.h>
+#include <unistd.h>
 #include "../util/tcp_socket.h"
 #include "../util/list.h"
 #include "../util/shared_queue.h"
@@ -18,6 +19,9 @@ void* connection_manager_th(void* data)
 
     tcp_socket server_sock = tcp_listen(settings->port);
     list_t* connection_list = node_connection_create_list();
+
+    int num_active_sockets = 0;
+    int has_seen_active_sockets = 0;
 
     // on data callback
     int  _on_data(tcp_select* sel, tcp_socket sock)
@@ -42,6 +46,7 @@ void* connection_manager_th(void* data)
     {
         LOG("Closing connection on socket %d", sock);
         node_connection_remove_by_socket(connection_list, sock);
+        num_active_sockets--;
         return 0;
     }
 
@@ -49,8 +54,11 @@ void* connection_manager_th(void* data)
     int _on_accept(tcp_select* sel, tcp_socket sock)
     {
         LOG("Accepted new connection. Socket %d", sock);
-        if(!node_connection_add_socket(connection_list, sock))
+        if(!node_connection_add_socket(connection_list, sock)) {
             perror("node_connection_add_socket");
+            return 0;
+        }
+        num_active_sockets++;
         return 1;
     }
 
@@ -68,8 +76,17 @@ void* connection_manager_th(void* data)
     while(1) {
         tcp_select_wait(sel);
         tcp_select_foreach(sel, _cleanup_sockets);
+        if(has_seen_active_sockets&&num_active_sockets == 0) {
+            LOG("%s", "No more active connections. Shutting down connection manager");
+            break;
+        } else {
+            has_seen_active_sockets = 1;
+        }
     }
 
+    tcp_select_destroy(sel);
+    close(server_sock);
+    return NULL;
 }
 
 void* connection_manager_configure(int port, shared_queue* queue)
