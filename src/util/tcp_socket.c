@@ -5,7 +5,6 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <fcntl.h>
 
 tcp_socket tcp_listen(int port)
 {
@@ -14,7 +13,7 @@ tcp_socket tcp_listen(int port)
         return -1;
     int fd = get_socket_descriptor(sock);
     int fd2 = dup(fd); 
-    tcp_close(sock);
+    tcp_close(&sock);
     return fd2;
 }
 
@@ -50,8 +49,7 @@ tcp_select* tcp_select_create(
     tcp_select* sel = malloc(sizeof(tcp_select));
     if(sel == NULL)
         return NULL;
-    sel->server_fd = dup(server_fd);
-    fcntl(sel->server_fd, F_SETFL, O_NONBLOCK);
+    sel->server_fd = server_fd;
     FD_ZERO(&sel->fds);
     sel->max_fd = sel->server_fd;
     FD_SET(sel->server_fd, &sel->fds);
@@ -78,8 +76,6 @@ void tcp_select_wait(tcp_select* sel)
         if(i == sel->server_fd) {
             int new_client = accept(i, NULL, NULL);
             if(new_client < 0) {
-                if(errno == EAGAIN || errno == EWOULDBLOCK)
-                    return;
                 sel->on_accept_error(sel, errno);
             } else {
                 if(sel->on_accept(sel, new_client)) {
@@ -102,9 +98,10 @@ void tcp_select_wait(tcp_select* sel)
 
 void tcp_select_foreach_fds(fd_set *fds, int fd_max, void (*cb)(tcp_socket))
 {
-    for(int i = 0; i < fd_max; i++)
-        if(FD_ISSET(i, fds))
+    for(int i = 0; i <= fd_max; i++)
+        if(FD_ISSET(i, fds)) {
             cb(i);
+        }
 }
 
 void tcp_select_foreach(tcp_select *sel, void(*cb)(tcp_socket))
