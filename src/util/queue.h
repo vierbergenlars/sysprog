@@ -2,10 +2,12 @@
 #define _QUEUE_H_
 #include <stddef.h>
 typedef struct queue queue;
-queue* queue_create(size_t max_size);
+queue* queue_create(size_t, size_t);
+queue* queue_fork(queue*);
+void queue_unfork(queue*);
 void queue_free(queue* q);
-void queue_enqueue(queue* q, queue_data_type* element);
+void queue_enqueue(queue* q, void* element);
 size_t queue_size(queue* q);
-queue_data_type* queue_top(queue* q);
-queue_data_type* queue_dequeue(queue* q);
+void* queue_top(queue* q);
+void* queue_dequeue(queue* q);
 #endif

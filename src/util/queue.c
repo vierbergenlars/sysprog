@@ -6,10 +6,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#ifndef queue_data_type
-#error queue_data_type must be defined
-#endif
-
 #define Q_CLAMP(queue, current) ((current)%((queue)->max_size))
 #define Q_LAST(queue) Q_CLAMP(queue, (queue)->first + (queue)->length)
 #define Q_NEXT_VALUE(queue, current) Q_CLAMP(queue, (current)+1)
@@ -47,25 +43,27 @@
 #define UNLOCK(lock) LOCK(unlock, lock)
 
 struct queue {
-    queue_data_type* arr;
+    char* arr;
     size_t max_size;
     size_t first;
     size_t length;
+    size_t element_size;
     LOCKABLE(first);
     LOCKABLE(length);
 };
 
-queue* queue_create(size_t max_size)
+queue* queue_create(size_t max_size, size_t element_size)
 {
     queue* q = malloc(sizeof(queue));
     if(q == NULL)
         return NULL;
-    q->arr = calloc(sizeof(queue_data_type), max_size);
+    q->arr = calloc(element_size, max_size);
     if(q->arr == NULL)
         goto err_out_1;
     q->max_size = max_size;
     q->first = 0;
     q->length = 0;
+    q->element_size = element_size;
 
     if(pthread_rwlock_init(&q->first_lock, NULL) != 0)
         goto err_out_2;
@@ -82,6 +80,21 @@ err_out_1:
     return NULL;
 }
 
+queue* queue_fork(queue* q)
+{
+    queue* q2 = queue_create(q->max_size, q->element_size);
+    if(q2 == NULL)
+        return NULL;
+    free(q2->arr);
+    q2->arr = q->arr;
+    return q2;
+}
+
+void queue_unfork(queue* q)
+{
+    free(q);
+}
+
 void queue_free(queue* q)
 {
     pthread_rwlock_destroy(&q->first_lock);
@@ -90,11 +103,11 @@ void queue_free(queue* q)
     free(q);
 }
 
-void queue_enqueue(queue* q, queue_data_type* element)
+void queue_enqueue(queue* q, void* element)
 {
    WR_LOCK(q->length);
    WR_LOCK(q->first);
-   memcpy(q->arr+Q_LAST(q), element, sizeof(queue_data_type));
+   memcpy(q->arr+Q_LAST(q)*q->element_size, element, q->element_size);
    if(q->length == q->max_size) {
        q->first = Q_NEXT_VALUE(q, q->first);
    } else {
@@ -112,21 +125,21 @@ size_t queue_size(queue* q)
     return len;
 }
 
-queue_data_type* queue_top(queue* q)
+void* queue_top(queue* q)
 {
     RD_LOCK(q->first);
-    queue_data_type* e = q->arr+q->first;
+    void* e = q->arr+q->first*q->element_size;
     UNLOCK(q->first);
     return e;
 }
 
-queue_data_type* queue_dequeue(queue* q)
+void* queue_dequeue(queue* q)
 {
     WR_LOCK(q->length);
     WR_LOCK(q->first);
     if(q->length == 0)
         return NULL;
-    queue_data_type* el = q->arr+q->first;
+    void* el = q->arr+q->first*q->element_size;
     q->first = Q_NEXT_VALUE(q, q->first);
     q->length--;
     UNLOCK(q->first);
