@@ -1,6 +1,11 @@
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include "node_connection.h"
 
+#define CONNECTION_TIMEOUT 15
 struct _node_connection {
     tcp_socket fd;
     time_t last_comm_time;
@@ -17,6 +22,7 @@ node_connection* node_connection_create(tcp_socket fd)
     conn->last_comm_time = time(NULL);
     memset(conn->last_data, 0, sizeof(sensor_wire_data));
     conn->last_data_offset = 0;
+    return conn;
 }
 
 void node_connection_destroy(node_connection* conn)
@@ -26,51 +32,51 @@ void node_connection_destroy(node_connection* conn)
     
 int node_connection_is_alive(node_connection* conn)
 {
-    return node->last_comm_time > time(NULL) - CONNECTION_TIMEOUT;
+    return conn->last_comm_time > time(NULL) - CONNECTION_TIMEOUT;
 }
 
 size_t node_connection_read(node_connection* conn)
 {
-    size_t bytes_to_read = sizeof(sensor_wire_data) - node->last_data_offset;
-    size_t bytes_read = read(node->socket, (node->last_data+node->last_data_offset), bytes_to_read);
+    size_t bytes_to_read = sizeof(sensor_wire_data) - conn->last_data_offset;
+    size_t bytes_read = read(conn->fd, (conn->last_data+conn->last_data_offset), bytes_to_read);
     if(bytes_read > 0) {
-        node->last_data_offset+=bytes_read;
-        node->last_communication = time(NULL);
+        conn->last_data_offset+=bytes_read;
+        conn->last_comm_time = time(NULL);
     } else if(bytes_read == 0) {
-        node->last_communication = 0;
+        conn->last_comm_time = 0;
     }
     return bytes_read;
 }
 
 sensor_wire_data* node_connection_read_buffer(node_connection* conn)
 {
-    if(node->last_data_offset < sizeof(sensor_wire_data))
+    if(conn->last_data_offset < sizeof(sensor_wire_data))
         return NULL;
     sensor_wire_data* data = malloc(sizeof(sensor_wire_data));
     if(data == NULL)
         return NULL;
-    memcpy(data, node->last_data, sizeof(sensor_wire_data));
-    node->last_data = 0;
+    memcpy(data, conn->last_data, sizeof(sensor_wire_data));
+    conn->last_data_offset = 0;
     return data;
 }
 
 node_connection* node_connection_find_by_socket(list_t* list, tcp_socket sock)
 {
-        int _find_sock(node_connection* conn)
+        int _find_sock(void* conn)
         {
-            return conn->fd = sock;
+            return ((node_connection*)conn)->fd = sock;
         }
         return list_find(list, _find_sock);
 }
 
-void node_connection_close_by_socket(list_t* list, tcp_socket sock)
+void node_connection_remove_by_socket(list_t* list, tcp_socket sock)
 {
-        int _find_sock(node_connection* conn)
+        int _find_sock(void* conn)
         {
-            return conn->fd = sock;
+            return ((node_connection*)conn)->fd = sock;
         }
         int index = list_find_index(list, _find_sock);
-        list_free_at_index(index);
+        list_free_at_index(list, index);
 }
 
 int node_connection_add_socket(list_t* list, tcp_socket sock)
@@ -83,5 +89,20 @@ int node_connection_add_socket(list_t* list, tcp_socket sock)
     return 1;
 }
 
+void _node_connection_copy(void** dest, void* src)
+{
+    *dest = malloc(sizeof(node_connection));
+    if(*dest != NULL)
+        memcpy(*dest, src, sizeof(node_connection));
+}
 
+void _node_connection_free(void** el)
+{
+    free(*el);
+    *el = NULL;
+}
 
+list_t* node_connection_create_list()
+{
+    return list_create(_node_connection_copy, _node_connection_free, NULL, NULL);
+}

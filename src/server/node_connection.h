@@ -1,9 +1,9 @@
 #ifndef _NODE_CONNECTION_H_
 #define _NODE_CONNECTION_H_
 #include <time.h>
-#include "sensor.h"
 #include "../util/tcp_socket.h"
 #include "../util/list.h"
+#include "connection_manager.h"
 typedef struct _node_connection node_connection;
 
 /**
@@ -56,4 +56,6 @@ void node_connection_remove_by_socket(list_t* list, tcp_socket sock);
  * @return int 0 if it failed, 1 if successful
  */
 int node_connection_add_socket(list_t* list, tcp_socket sock);
+
+list_t* node_connection_create_list(void);
 #endif
