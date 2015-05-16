@@ -42,6 +42,7 @@ try_nextline:
                 if(line[i] == '\n') {
                     line[i] = '\0';
                     fprintf(outFd, "%d %d %s\n", ++seq, (int)time(NULL), line);
+                    fflush(outFd);
                     memmove(line, &line[i+1], 1024-i);
                     readBytes-=i;
                     goto try_nextline;
