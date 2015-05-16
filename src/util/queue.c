@@ -105,9 +105,14 @@ void queue_free(queue* q)
 
 void queue_enqueue(queue* q, void* element)
 {
+   memcpy(queue_forward(q), element, q->element_size);
+}
+
+void* queue_forward(queue* q)
+{
    WR_LOCK(q->length);
    WR_LOCK(q->first);
-   memcpy(q->arr+Q_LAST(q)*q->element_size, element, q->element_size);
+   void* pos = q->arr+Q_LAST(q)*q->element_size;
    if(q->length == q->max_size) {
        q->first = Q_NEXT_VALUE(q, q->first);
    } else {
@@ -115,7 +120,9 @@ void queue_enqueue(queue* q, void* element)
    }
    UNLOCK(q->first);
    UNLOCK(q->length);
+   return pos;
 }
+
 
 size_t queue_size(queue* q)
 {
