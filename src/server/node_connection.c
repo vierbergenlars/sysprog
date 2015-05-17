@@ -4,6 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "node_connection.h"
+#include "config.h"
 
 #define CONNECTION_TIMEOUT 15
 struct _node_connection {

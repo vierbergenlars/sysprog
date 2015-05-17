@@ -3,6 +3,7 @@
 #include "log.h"
 #include "../util/shared_queue.h"
 #include "connection_manager.h"
+#include "config.h"
 
 int main(void)
 {

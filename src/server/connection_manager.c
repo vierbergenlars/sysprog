@@ -5,6 +5,7 @@
 #include "../util/tcp_socket.h"
 #include "../util/list.h"
 #include "../util/shared_queue.h"
+#include "config.h"
 #include "node_connection.h"
 
 struct _connection_manager_info {
