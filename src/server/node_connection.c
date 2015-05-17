@@ -85,8 +85,11 @@ int node_connection_add_socket(list_t* list, tcp_socket sock)
     node_connection* conn = node_connection_create(sock);
     if(conn == NULL)
         return 0;
-    if(list_insert_at_index(list, conn, 0) == NULL)
+    if(list_insert_at_index(list, conn, 0) == NULL) {
+        free(conn);
         return 0;
+    }
+    free(conn);
     return 1;
 }
 

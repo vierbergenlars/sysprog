@@ -38,6 +38,7 @@ void* connection_manager_th(void* data)
         if(wire_data != NULL) {
             LOG("Enqueued data packet from socket %d", sock);
             shared_queue_enqueue(settings->queue, wire_data);
+            free(wire_data);
         }
         return 1;
     }
@@ -85,8 +86,10 @@ void* connection_manager_th(void* data)
         }
     }
 
+    list_free(&connection_list);
     tcp_select_destroy(sel);
     close(server_sock);
+    free(data);
     return NULL;
 }
 
