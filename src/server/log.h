@@ -3,7 +3,7 @@
 #include <stdio.h>
 extern FILE* log_file;
 #define LOG(fmt, args...) do { \
-    fprintf(log_file,fmt"\n", args); \
+    fprintf(log_file, "%s: " fmt"\n",__FILE__, ##args); \
     fflush(log_file); \
 } while(0)
 void log_stop(void);
