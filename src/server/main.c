@@ -3,6 +3,7 @@
 #include "log.h"
 #include "../util/shared_queue.h"
 #include "connection_manager.h"
+#include "storage_manager.h"
 #include "config.h"
 #include <signal.h>
 
@@ -25,7 +26,7 @@ int main(void)
     }
     volatile sig_atomic_t shutdown_flag = 0;
     pthread_t connection_manager;
-    //pthread_t storage_manager;
+    pthread_t storage_manager;
     //pthread_t data_manager;
 
     void _signal_handler(int sig)
@@ -52,8 +53,18 @@ int main(void)
 
     PTHREAD_CREATE(connection_manager, connection_manager_th, connection_manager_configure(port, shared_queue, &shutdown_flag));
 
+    queue* storage_manager_queue = shared_queue_fork(shared_queue);
+    if(storage_manager_queue == NULL) {
+        fprintf(stderr, "Cannot create storage manager queue: %m\n");
+        return EXIT_FAILURE;
+    }
+
+    PTHREAD_CREATE(storage_manager, storage_manager_th, storage_manager_configure(storage_manager_queue, &shutdown_flag));
 
     PTHREAD_JOIN(connection_manager);
+    PTHREAD_JOIN(storage_manager);
+    
+    queue_unfork(storage_manager_queue);
     shared_queue_free(shared_queue);
     queue_free(main_queue);
     log_stop();

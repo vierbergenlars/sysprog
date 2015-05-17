@@ -8,7 +8,11 @@ all: server logger
 logger: $(patsubst %.c,%.o,$(LOGGER_SRC))
 	$(CC) $(LFLAGS) $+ -o $@
 server: $(patsubst %.c,%.o,$(SERVER_SRC))
-	$(CC) $(LFLAGS) $+ -o $@
+	$(CC) $(LFLAGS) $(shell mysql_config --libs) $+ -o $@
+src/server/sensor_db.o: src/server/sensor_db.c
+	$(CC) $(CFLAGS) $(shell mysql_config --cflags) -c $< -o $@
+src/server/storage_manager.o: src/server/storage_manager.c
+	$(CC) $(CFLAGS) $(shell mysql_config --cflags) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 clean:
