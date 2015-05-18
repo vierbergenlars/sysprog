@@ -136,8 +136,11 @@ void* queue_top(queue* q)
 {
     RD_LOCK(q->first);
     void* e = q->arr+q->first*q->element_size;
+    void* c = malloc(q->element_size);
+    if(c != NULL)
+        memcpy(c, e, q->element_size);
     UNLOCK(q->first);
-    return e;
+    return c;
 }
 
 void* queue_dequeue(queue* q)
@@ -147,9 +150,12 @@ void* queue_dequeue(queue* q)
     if(q->length == 0)
         return NULL;
     void* el = q->arr+q->first*q->element_size;
+    void* c = malloc(q->element_size);
+    if(c != NULL)
+        memcpy(c, el, q->element_size);
     q->first = Q_NEXT_VALUE(q, q->first);
     q->length--;
     UNLOCK(q->first);
     UNLOCK(q->length);
-    return el;
+    return c;
 }

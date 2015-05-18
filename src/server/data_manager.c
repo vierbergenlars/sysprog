@@ -41,13 +41,16 @@ void* data_manager_th(void* data)
         }
         sensor_data* sensor = sensor_list_find_sensor(nodes, data);
         if(sensor == NULL) {
+            free(data);
             LOG("Unmapped sensor (id=%d); ignored", data->sensor_id);
             continue;
         }
         if(!sensor_update(sensor, data)) {
+            free(data);
             LOG("Stale data from sensor (id=%d); ignored", data->sensor_id);
             continue;
         }
+        free(data);
 
         if(queue_size(sensor->hist_data) == 5) {
             double avg = sensor_average(sensor);

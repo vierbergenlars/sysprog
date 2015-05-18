@@ -49,9 +49,11 @@ connect:
 
         if(insert_sensor(mysql_conn, data->sensor_id, data->temp, data->timestamp)) {
             LOG("Connection to mysql server lost");
+            free(data);
             goto connect;
         }
-        queue_dequeue(settings->q);
+        free(data);
+        free(queue_dequeue(settings->q));
     }
 shutdown:
     LOG("Shutting down");
