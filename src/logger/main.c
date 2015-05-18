@@ -6,6 +6,8 @@
 #include <time.h>
 #include <poll.h>
 
+#define BUFFER 4084
+
 void* read_until_newline(FILE*);
 int main(void)
 {
@@ -35,18 +37,18 @@ int main(void)
                 fclose(inFd);
                 exit(EXIT_SUCCESS);
             }
-            char line[1024];
+            char line[BUFFER];
             int skipBytes = 0;
             ssize_t readBytes;
 read_piece:
-            readBytes = read(inSock, line+skipBytes, 1024-skipBytes);
+            readBytes = read(inSock, line+skipBytes, BUFFER-skipBytes);
 try_nextline:
             for(int i = skipBytes; i < readBytes; i++) {
                 if(line[i] == '\n') {
                     line[i] = '\0';
                     fprintf(outFd, "%d %d %s\n", ++seq, (int)time(NULL), line);
                     fflush(outFd);
-                    memmove(line, &line[i+1], 1024-i);
+                    memmove(line, &line[i+1], BUFFER-i);
                     readBytes-=i;
                     skipBytes = 0;
                     goto try_nextline;
