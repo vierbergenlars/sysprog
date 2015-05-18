@@ -39,7 +39,6 @@ void* data_manager_th(void* data)
             LOG("Read a null data packet?!");
             continue;
         }
-        LOG("Dequeued packet (%d, %f, %d)", data->sensor_id, data->temp, data->timestamp);
         sensor_data* sensor = sensor_list_find_sensor(nodes, data);
         if(sensor == NULL) {
             free(data);
