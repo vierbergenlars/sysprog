@@ -4,6 +4,7 @@
 #include "../util/shared_queue.h"
 #include "connection_manager.h"
 #include "storage_manager.h"
+#include "data_manager.h"
 #include "sensor.h"
 #include <signal.h>
 
@@ -27,7 +28,7 @@ int main(void)
     volatile sig_atomic_t shutdown_flag = 0;
     pthread_t connection_manager;
     pthread_t storage_manager;
-    //pthread_t data_manager;
+    pthread_t data_manager;
 
     void _signal_handler(int sig)
     {
@@ -38,6 +39,7 @@ int main(void)
     signal(SIGINT, _signal_handler);
     signal(SIGHUP, _signal_handler);
     signal(SIGTERM, _signal_handler);
+
     queue* main_queue = queue_create(15, sizeof(sensor_wire_data));
     if(main_queue == NULL) {
         fprintf(stderr, "Cannot create main queue: %m\n");
@@ -49,6 +51,11 @@ int main(void)
         return EXIT_FAILURE;
     }
 
+    FILE* mapping_file = fopen("mapping_file", "r");
+    if(mapping_file == NULL) {
+        fprintf(stderr, "Cannot open mapping_file: %m\n");
+        return EXIT_FAILURE;
+    }
     int port = 1234;
 
     PTHREAD_CREATE(connection_manager, connection_manager_th, connection_manager_configure(port, shared_queue, &shutdown_flag));
@@ -60,13 +67,16 @@ int main(void)
     }
 
     PTHREAD_CREATE(storage_manager, storage_manager_th, storage_manager_configure(storage_manager_queue, &shutdown_flag));
+    PTHREAD_CREATE(data_manager, data_manager_th, data_manager_configure(main_queue, mapping_file, &shutdown_flag));
 
     PTHREAD_JOIN(connection_manager);
     PTHREAD_JOIN(storage_manager);
+    PTHREAD_JOIN(data_manager);
     
     queue_unfork(storage_manager_queue);
     shared_queue_free(shared_queue);
     queue_free(main_queue);
+    fclose(mapping_file);
     log_stop();
     return EXIT_SUCCESS;
 }
