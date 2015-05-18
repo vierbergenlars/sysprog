@@ -46,7 +46,7 @@ connect:
             LOG("Got a NULL data packet?!");
             continue;
         }
-
+        LOG("Dequeued packet (%d, %f, %d)", data->sensor_id, data->temp, data->timestamp);
         if(insert_sensor(mysql_conn, data->sensor_id, data->temp, data->timestamp)) {
             LOG("Connection to mysql server lost");
             free(data);

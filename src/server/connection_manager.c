@@ -34,7 +34,7 @@ void* connection_manager_th(void* data)
             return 0;
         sensor_wire_data* wire_data = node_connection_read_buffer(conn);
         if(wire_data != NULL) {
-            LOG("Enqueued data packet from socket %d", sock);
+            LOG("Enqueued data packet from socket %d (%d, %f, %d)", sock, wire_data->sensor_id, wire_data->temp, wire_data->timestamp);
             shared_queue_enqueue(settings->queue, wire_data);
             free(wire_data);
         }
