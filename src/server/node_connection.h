@@ -4,7 +4,7 @@
 #include "../util/tcp_socket.h"
 #include "../util/list.h"
 #include "connection_manager.h"
-#include "config.h"
+#include "sensor.h"
 typedef struct _node_connection node_connection;
 
 /**

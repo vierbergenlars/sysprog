@@ -1,6 +1,5 @@
 #ifndef _CONNECTION_MANAGER_H_
 #define _CONNECTION_MANAGER_H_
-#include "../util/tcp_socket.h"
 #include "../util/shared_queue.h"
 #include <inttypes.h>
 #include <signal.h>

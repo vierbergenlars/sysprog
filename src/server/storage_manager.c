@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include "sensor_db.h"
 #include "config.h"
+#include "sensor.h"
+#include <signal.h>
 
 struct _storage_manager_info {
     queue* q;

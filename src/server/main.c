@@ -4,7 +4,7 @@
 #include "../util/shared_queue.h"
 #include "connection_manager.h"
 #include "storage_manager.h"
-#include "config.h"
+#include "sensor.h"
 #include <signal.h>
 
 #define PTHREAD_CREATE(pthread, fn, data) \
