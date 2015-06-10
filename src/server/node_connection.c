@@ -65,7 +65,7 @@ node_connection* node_connection_find_by_socket(list_t* list, tcp_socket sock)
 {
         int _find_sock(void* conn)
         {
-            return ((node_connection*)conn)->fd = sock;
+            return ((node_connection*)conn)->fd == sock;
         }
         return list_find(list, _find_sock);
 }
