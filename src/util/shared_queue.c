@@ -13,6 +13,12 @@ void _shared_queue_free(void** q)
     // NOP
 }
 
+/**
+ * Creates a shared queue from a normal queue
+ *
+ * The normal queue may only be read from, no new elements may be enqueued externally.
+ * @return list_t*|NULL
+ */
 shared_queue* shared_queue_create(queue* q)
 {
     list_t* ls = list_create(_shared_queue_copy, _shared_queue_free, NULL, NULL);
@@ -24,6 +30,13 @@ shared_queue* shared_queue_create(queue* q)
 }
 
 
+/**
+ * Enqueues an element in all shared queues
+ *
+ * The element gets enqueued in the first queue,
+ * the other queues get forwarded, so the pointers
+ * to the data line up.
+ */
 void shared_queue_enqueue(shared_queue* q, void* el)
 {
     struct list_node *node = q->first;
@@ -36,6 +49,13 @@ void shared_queue_enqueue(shared_queue* q, void* el)
     }
 }
 
+/**
+ * Creates a new copy of the queue that has its data synchronized
+ * with the other queues in this shared queue.
+ *
+ * This queue should only be read from, not written to.
+ * @return queue*|NULL
+ */
 queue* shared_queue_fork(shared_queue* sq)
 {
     queue* q = list_get_element_at_index(sq, 0);
@@ -52,6 +72,11 @@ queue* shared_queue_fork(shared_queue* sq)
     return q2;
 }
 
+/**
+ * Frees the shared queue.
+ * The main queue and forked queues should be freed separately with
+ * queue_free() and queue_unfork() respectively.
+ */
 void shared_queue_free(shared_queue* sq)
 {
     list_free(&sq);

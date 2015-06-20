@@ -12,6 +12,7 @@ void _sensor_copy(void** d, void* s) {
 void _sensor_free(void** o) {
     sensor_free(*o);
 }
+
 /**
  * Creates a new sensor list
  * @return list_t*|NULL
