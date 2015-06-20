@@ -53,6 +53,7 @@ struct queue {
     LOCKABLE(length);
 };
 
+int queue_setup_locks(queue* q);
 /**
  * Creates a new queue
  * @param max_size The maximum number of elements that can be supported by the circular queue
@@ -65,27 +66,36 @@ queue* queue_create(size_t max_size, size_t element_size)
     if(q == NULL)
         return NULL;
     q->arr = calloc(element_size, max_size);
-    if(q->arr == NULL)
-        goto err_out_1;
+    if(q->arr == NULL) {
+        free(q);
+        return NULL;
+    }
     q->max_size = max_size;
     q->first = 0;
     q->length = 0;
     q->element_size = element_size;
     q->on_overflow = NULL;
 
-    if(pthread_rwlock_init(&q->first_lock, NULL) != 0)
-        goto err_out_2;
-    if(pthread_rwlock_init(&q->length_lock, NULL) != 0)
-        goto err_out_3;
+    if(!queue_setup_locks(q)) {
+        free(q->arr);
+        free(q);
+        return NULL;
+    }
     return q;
+}
 
-err_out_3:
-    pthread_rwlock_destroy(&q->first_lock);
-err_out_2:
-    free(q->arr);
-err_out_1:
-    free(q);
-    return NULL;
+/**
+ * Setups locks for the queue
+ */
+int queue_setup_locks(queue* q)
+{
+    if(pthread_rwlock_init(&q->first_lock, NULL) != 0)
+        return 0;
+    if(pthread_rwlock_init(&q->length_lock, NULL) != 0) {
+        pthread_rwlock_destroy(&q->first_lock);
+        return 0;
+    }
+    return 1;
 }
 
 /**
@@ -106,11 +116,18 @@ void queue_on_overflow(queue* q, void (*on_overflow)())
  */
 queue* queue_fork(queue* q)
 {
-    queue* q2 = queue_create(q->max_size, q->element_size);
+    queue* q2 = malloc(sizeof(queue));
     if(q2 == NULL)
         return NULL;
-    free(q2->arr);
+    if(!queue_setup_locks(q2)) {
+        free(q2);
+        return NULL;
+    }
     q2->arr = q->arr;
+    q2->first = q->first;
+    q2->length = q->length;
+    q2->max_size = q->max_size;
+    q2->element_size = q->element_size;
     q2->on_overflow = q->on_overflow;
     return q2;
 }
