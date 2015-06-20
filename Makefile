@@ -1,8 +1,8 @@
 UTIL_SRC=$(wildcard src/util/*.c)
 SERVER_SRC=$(wildcard src/server/*.c) $(UTIL_SRC)
 LOGGER_SRC=$(wildcard src/logger/*.c) $(UTIL_SRC)
-CFLAGS+=-Wall -std=gnu99 -pthread -g -DSET_MIN_TEMP=17 -DSET_MAX_TEMP=24
-LFLAGS+=-g -pthread
+CFLAGS+=-Wall -std=gnu99 -pthread -DSET_MIN_TEMP=17 -DSET_MAX_TEMP=24 
+LFLAGS+=-pthread 
 
 all: server logger sensor_node
 logger: $(patsubst %.c,%.o,$(LOGGER_SRC))
