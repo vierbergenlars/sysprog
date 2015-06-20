@@ -37,7 +37,7 @@ int main(void)
                 fclose(inFd);
                 exit(EXIT_SUCCESS);
             }
-            char line[BUFFER];
+            char line[BUFFER] = {0};
             int skipBytes = 0;
             ssize_t readBytes;
 read_piece:
