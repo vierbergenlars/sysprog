@@ -63,9 +63,9 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    FILE* mapping_file = fopen("mapping_file", "r");
+    FILE* mapping_file = fopen("sensor_map", "r");
     if(mapping_file == NULL) {
-        fprintf(stderr, "Cannot open mapping_file: %m\n");
+        fprintf(stderr, "Cannot open sensor_map: %m\n");
         return EXIT_FAILURE;
     }
 
