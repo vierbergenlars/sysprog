@@ -25,7 +25,7 @@ void* connection_manager_th(void* data)
     // on data callback
     int  _on_data(tcp_select* sel, tcp_socket sock)
     {
-        LOG("New data packet on socket %d", sock);
+        DEBUG_LOG("New data packet on socket %d", sock);
         node_connection* conn = node_connection_find_by_socket(connection_list, sock);
         if(conn == NULL)
             return 0; // Close this connection
@@ -34,7 +34,7 @@ void* connection_manager_th(void* data)
             return 0;
         sensor_wire_data* wire_data = node_connection_read_buffer(conn);
         if(wire_data != NULL) {
-            LOG("Enqueued data packet from socket %d", sock);
+            DEBUG_LOG("Enqueued data packet from socket %d", sock);
             shared_queue_enqueue(settings->queue, wire_data);
             free(wire_data);
         }
