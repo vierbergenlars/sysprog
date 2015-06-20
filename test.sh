@@ -10,5 +10,5 @@ sleep 1
 echo "Press ^C to stop the server and sensor nodes"
 tail -f gateway.log&
 TAIL_PID=$!
+trap "kill $TAIL_PID" EXIT INT
 wait $SERVER_PID
-kill $TAIL_PID
