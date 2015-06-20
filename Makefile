@@ -15,6 +15,8 @@ src/server/storage_manager.o: src/server/storage_manager.c
 	$(CC) $(CFLAGS) $(shell mysql_config --cflags) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+gprof-helper.so: gprof-helper.c
+	gcc -shared -fPIC $< -o $@ -lpthread -ldl
 clean:
 	rm -f src/*/*.o
 	rm -f server
