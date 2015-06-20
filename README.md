@@ -1,5 +1,10 @@
 # Sensor monitoring system
 
+## Configuration
+
+* Credentials for the mysql database must be changed in `src/server/config.h`
+* Minimum and maximum temperature configuration can be changed in `Makefile`
+
 ## Compiling
 
 * Run `make` to build in the standard configuration
