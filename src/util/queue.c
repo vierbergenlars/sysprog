@@ -52,6 +52,12 @@ struct queue {
     LOCKABLE(length);
 };
 
+/**
+ * Creates a new queue
+ * @param max_size The maximum number of elements that can be supported by the circular queue
+ * @param element_size The size of one element
+ * @return queue*|NULL
+ */
 queue* queue_create(size_t max_size, size_t element_size)
 {
     queue* q = malloc(sizeof(queue));
@@ -80,6 +86,12 @@ err_out_1:
     return NULL;
 }
 
+/**
+ * Creates a copy of the queue that shares the data
+ * but has a separate head & tail
+ *
+ * @return queue*|NULL
+ */
 queue* queue_fork(queue* q)
 {
     queue* q2 = queue_create(q->max_size, q->element_size);
@@ -90,11 +102,18 @@ queue* queue_fork(queue* q)
     return q2;
 }
 
+/**
+ * Frees a forked queue.
+ * Shared data is not freed
+ */
 void queue_unfork(queue* q)
 {
     free(q);
 }
 
+/**
+ * Frees the queue.
+ */
 void queue_free(queue* q)
 {
     pthread_rwlock_destroy(&q->first_lock);
@@ -103,11 +122,18 @@ void queue_free(queue* q)
     free(q);
 }
 
+/**
+ * Adds a new element to the tail of the queue.
+ */
 void queue_enqueue(queue* q, void* element)
 {
    memcpy(queue_forward(q), element, q->element_size);
 }
 
+/**
+ * Makes room for a new element on the tail of the queue.
+ * @return void* The place where the next element can be written
+ */
 void* queue_forward(queue* q)
 {
    WR_LOCK(q->length);
@@ -123,7 +149,9 @@ void* queue_forward(queue* q)
    return pos;
 }
 
-
+/**
+ * Gets the size of the queue
+ */
 size_t queue_size(queue* q)
 {
     RD_LOCK(q->length);
@@ -132,6 +160,10 @@ size_t queue_size(queue* q)
     return len;
 }
 
+/**
+ * Gets a copy of the element on the top of the queue
+ * @return void*|NULL
+ */
 void* queue_top(queue* q)
 {
     RD_LOCK(q->first);
@@ -143,6 +175,11 @@ void* queue_top(queue* q)
     return c;
 }
 
+/**
+ * Gets a copy of the element on top of the queue,
+ * and remove the top element frop the queue
+ * @return void*|NULL
+ */
 void* queue_dequeue(queue* q)
 {
     WR_LOCK(q->length);
