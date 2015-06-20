@@ -112,7 +112,10 @@ void tcp_select_wait(tcp_select* sel)
         }
     }
     fd_set fds = sel->fds;
-    if(select(sel->max_fd+1, &fds, NULL, NULL, NULL) > 0) {
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    if(select(sel->max_fd+1, &fds, NULL, NULL, &timeout) > 0) {
         tcp_select_foreach_fds(&fds, sel->max_fd, _handle_select);
     }
 }
