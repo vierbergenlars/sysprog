@@ -3,6 +3,7 @@
 #include <stddef.h>
 typedef struct queue queue;
 queue* queue_create(size_t, size_t);
+void queue_on_overflow(queue* q, void (*on_overflow)());
 queue* queue_fork(queue*);
 void queue_unfork(queue*);
 void queue_free(queue* q);

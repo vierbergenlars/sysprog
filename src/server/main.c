@@ -51,6 +51,12 @@ int main(int argc, char** argv)
         fprintf(stderr, "Cannot create main queue: %m\n");
         return EXIT_FAILURE;
     }
+
+    void _main_queue_on_overflow()
+    {
+        LOG("Queue is full: overwriting data");
+    }
+    queue_on_overflow(main_queue, &_main_queue_on_overflow);
     shared_queue* shared_queue = shared_queue_create(main_queue);
     if(shared_queue == NULL) {
         fprintf(stderr, "Cannot create shared queue: %m\n");

@@ -48,6 +48,7 @@ struct queue {
     size_t first;
     size_t length;
     size_t element_size;
+    void (*on_overflow)();
     LOCKABLE(first);
     LOCKABLE(length);
 };
@@ -70,6 +71,7 @@ queue* queue_create(size_t max_size, size_t element_size)
     q->first = 0;
     q->length = 0;
     q->element_size = element_size;
+    q->on_overflow = NULL;
 
     if(pthread_rwlock_init(&q->first_lock, NULL) != 0)
         goto err_out_2;
@@ -87,6 +89,16 @@ err_out_1:
 }
 
 /**
+ * Register a function to be called when the queue overflows.
+ *
+ * The function is called with the element that gets dropped as only argument
+ */
+void queue_on_overflow(queue* q, void (*on_overflow)())
+{
+    q->on_overflow = on_overflow;
+}
+
+/**
  * Creates a copy of the queue that shares the data
  * but has a separate head & tail
  *
@@ -99,6 +111,7 @@ queue* queue_fork(queue* q)
         return NULL;
     free(q2->arr);
     q2->arr = q->arr;
+    q2->on_overflow = q->on_overflow;
     return q2;
 }
 
@@ -140,6 +153,9 @@ void* queue_forward(queue* q)
    WR_LOCK(q->first);
    void* pos = q->arr+Q_LAST(q)*q->element_size;
    if(q->length == q->max_size) {
+       if(q->on_overflow != NULL) {
+           q->on_overflow();
+       }
        q->first = Q_NEXT_VALUE(q, q->first);
    } else {
        q->length++;
