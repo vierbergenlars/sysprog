@@ -19,16 +19,22 @@
         return EXIT_FAILURE; \
     }
 
-int main(void)
+int main(int argc, char** argv)
 {
+
+    volatile sig_atomic_t shutdown_flag = 0;
+    int port = 1234;
+    pthread_t connection_manager;
+    pthread_t storage_manager;
+    pthread_t data_manager;
+
+    if(argc > 1)
+        port = atoi(argv[1]);
+
     if(!log_start()) {
         fprintf(stderr, "Cannot open the log.\n");
         return EXIT_FAILURE;
     }
-    volatile sig_atomic_t shutdown_flag = 0;
-    pthread_t connection_manager;
-    pthread_t storage_manager;
-    pthread_t data_manager;
 
     void _signal_handler(int sig)
     {
@@ -56,7 +62,6 @@ int main(void)
         fprintf(stderr, "Cannot open mapping_file: %m\n");
         return EXIT_FAILURE;
     }
-    int port = 1234;
 
     PTHREAD_CREATE(connection_manager, connection_manager_th, connection_manager_configure(port, shared_queue, &shutdown_flag));
 
