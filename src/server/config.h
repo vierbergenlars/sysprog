@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#define DB_HOST "localhost"
+#define DB_HOST "studev.groept.be"
 #define DB_USER "a13_syssoft"
 #define DB_PASSWORD "a13_syssoft"
 #define DB_DATABASE "a13_syssoft"
