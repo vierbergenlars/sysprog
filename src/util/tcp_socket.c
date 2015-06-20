@@ -6,6 +6,10 @@
 #include <sys/socket.h>
 #include <errno.h>
 
+/**
+ * Opens a new listening tcp connection on the specified port
+ * @return tcp_socket|-1
+ */
 tcp_socket tcp_listen(int port)
 {
     Socket sock = tcp_passive_open(port);
@@ -38,6 +42,17 @@ void tcp_select_error_callback_empty(tcp_select* t, tcp_socket s)
 #define CB_SELECT_SET(s, cb) s->cb = (((cb) == NULL)?tcp_select_callback_empty:(cb))
 #define CB_SEL_ERR_SET(s, cb) s->cb = (((cb) == NULL)?tcp_select_error_callback_empty:(cb))
 
+/**
+ * Creates a new tcp select structure for asynchronous waiting on sockets.
+ * @param server_fd An opened, listening tcp socket
+ * @param on_accept Callback function that gets called after a new client connection has been accepted
+ *   If it returns 1, the new socket gets added to the waitlist. If it returns 0, the socket is not added.
+ * @param on_accept_error Callback function that gets called when creating a new client connection has failed.
+ * @param on_data Callback function called when data on a client socket is available
+ *   If it returns 0, the socket gets closed and removed from the waitlist
+ * @param on_close Callback function that gets called when a client connection gets closed.
+ * @return tcp_select*|NULL
+ */
 tcp_select* tcp_select_create(
         tcp_socket                server_fd,
         tcp_select_callback       on_accept,
@@ -60,6 +75,9 @@ tcp_select* tcp_select_create(
     return sel;
 }
 
+/**
+ * Destroys a tcp select structure and closes all client connections
+ */
 void tcp_select_destroy(tcp_select* sel)
 {
     void _close_all(tcp_socket i) {
@@ -70,6 +88,9 @@ void tcp_select_destroy(tcp_select* sel)
     free(sel);
 }
 
+/**
+ * Waits for a new client on the listening server socket, or for new data on any client socket on the waitlist.
+ */
 void tcp_select_wait(tcp_select* sel)
 {
     void _handle_select(tcp_socket i) {
@@ -96,6 +117,9 @@ void tcp_select_wait(tcp_select* sel)
     }
 }
 
+/**
+ * Iterates over all sockets in the fd_set, up to fd_max, and calls the callbackfunction
+ */
 void tcp_select_foreach_fds(fd_set *fds, int fd_max, void (*cb)(tcp_socket))
 {
     for(int i = 0; i <= fd_max; i++)
@@ -104,11 +128,17 @@ void tcp_select_foreach_fds(fd_set *fds, int fd_max, void (*cb)(tcp_socket))
         }
 }
 
+/**
+ * Calls the callback function cb for each socket in the waitlist
+ */
 void tcp_select_foreach(tcp_select *sel, void(*cb)(tcp_socket))
 {
     tcp_select_foreach_fds(&sel->fds, sel->max_fd, cb);
 }
 
+/**
+ * Closes a socket, calls the on_close callback function and removes it from the waitlist
+ */
 void tcp_select_close_socket(tcp_select *sel, tcp_socket i)
 {
     if(FD_ISSET(i, &sel->fds)) {
