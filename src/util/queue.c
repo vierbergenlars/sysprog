@@ -138,6 +138,8 @@ queue* queue_fork(queue* q)
  */
 void queue_unfork(queue* q)
 {
+    pthread_rwlock_destroy(&q->first_lock);
+    pthread_rwlock_destroy(&q->length_lock);
     free(q);
 }
 
